@@ -1,13 +1,14 @@
 import os
 import cv2
-
+import numpy as np
 class VideoFrameReader:
-    def __init__(self, video_path, extensions=['.jpg', '.png']):
+    def __init__(self, video_path, extensions=['.jpg', '.png'], fit=True):
         self.fps = 12  # for video writer
         self.video_path = video_path
         self.frame_list = []
         self.extensions = extensions
         self.read_count = 0
+        self.fit = fit
         
         # Populate frame_list with valid images
         for im in sorted(os.listdir(video_path)):
@@ -15,7 +16,7 @@ class VideoFrameReader:
                 self.frame_list.append(im)
         
         self.frame_len = len(self.frame_list)
-        print(f"{video_path} has {self.frame_len} frames")
+        # print(f"{video_path} has {self.frame_len} frames")
         
         self.init_frame_metadata()
     
@@ -74,5 +75,24 @@ class VideoFrameReader:
         if self.width != frame.shape[1] or self.height != frame.shape[0]:
             frame = cv2.resize(frame, (self.width, self.height))
         
-        return frame
+        
+
+        if self.fit:
+            res = np.zeros((1024, 1024, self.args.input_ch), dtype=np.uint8)  # Fill in the background with black
+            if frame.shape[0]<=1024 and frame.shape[1]<=1024:
+                res[:frame.shape[0], :frame.shape[1]] = frame
+            elif frame.shape[0]>1024 and frame.shape[1]>1024:
+                res[:, :] = frame[:1024,:1024] 
+            elif frame.shape[0]>1024:
+                res[:, :frame.shape[1]] = frame[:1024,:]
+            elif frame.shape[1]>1024:
+                res[:frame.shape[0], :] = frame[:,:1024]
+            else:
+                print('error')
+
+            return res
+        else:
+            return frame
+        
+        
 

@@ -1,0 +1,41 @@
+{
+    "sync-rsync.shell": "ssh",
+    "sync-rsync.sites": [
+        {
+            "remotePath":"xovis@deep3:/datadisk/deep3share/source/gurkirt_codepad/foundationa_models/masa/",
+            "localPath": "/home/gurkirt/data/gurkirt_codepad/foundationa_models/masa/"
+        },
+        // {
+        //     "remotePath":"xovis@deep2:/datadisk/deep2share/source/gurkirt_codepad/",   // Sync sync-rsync.local to user1@server1:/path1/ using port 1234
+        //     "localPath": "/home/gurkirt/data/gurkirt_codepad/"
+        // },
+        // {
+        //     "remotePath":"xovis@deep:/datadisk/deepshare/source/gurkirt_codepad/",   // Sync sync-rsync.local to user1@server1:/path1/ using port 1234
+        //     "localPath": "/home/gurkirt/data/gurkirt_codepad/"
+        // },
+    ],
+    "sync-rsync.onSave": true,
+    "sync-rsync.onSaveIndividual": true,
+    "sync-rsync.exclude": [
+        // ".vscode",
+        "awstats-icon",
+        "awstatsicons",
+        ".git",
+        ".gitignore",
+        ".well-known",
+        "icon",
+        // "bootstrap",
+        // "fonts",
+        // "node_modules",
+        // "storage",
+        // "stats",
+        // "vendor",
+        // "tests"
+    ],
+
+    // "sync-rsync.chmod": "D2775,F664",
+    "sync-rsync.useWSL": true,
+    // "sync-rsync.delete": true,
+    "cmake.configureOnOpen": false,
+    // "cmake.sourceDirectory": "/home/gurkirt/smb/deep2_share/source/gurkirt_codepad/detectors_python/YOLOv6/deploy/TensorRT"
+}

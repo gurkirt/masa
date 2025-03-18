@@ -237,7 +237,7 @@ class MasaTaoTracker(BaseTracker):
             pred_track_instances = data_sample.pred_instances.clone()
             pred_track_instances.instances_id = ids
             pred_track_instances.mask_inds = torch.zeros_like(labels)
-            return pred_track_instances
+            return [pred_track_instances, None]
 
         # get track feats
         rescaled_bboxes = bboxes.clone()
@@ -339,7 +339,7 @@ class MasaTaoTracker(BaseTracker):
         if with_segm:
             pred_track_instances.mask_inds = mask_inds[tracklet_inds]
 
-        return pred_track_instances
+        return [pred_track_instances, track_feats]
 
     def remove_distractor(
         self,

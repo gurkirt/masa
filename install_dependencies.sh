@@ -32,3 +32,5 @@ pip install git+https://github.com/lvis-dataset/lvis-api.git
 
 
 echo "All packages installed successfully!"
+
+echo "Finished installing all dependencies."

@@ -364,10 +364,11 @@ class MASA(BaseMOTModel):
                         img_data_sample.pred_instances.masks[i]
                         for i in frame_pred_track_instances.mask_inds
                     ]
+            # if len(frame_pred_track_instances)<1:
+            #     return None
+            img_data_sample.pred_track_instances = frame_pred_track_instances[0]
 
-            img_data_sample.pred_track_instances = frame_pred_track_instances
-
-        return [track_data_sample]
+        return [track_data_sample, frame_pred_track_instances[1]]
 
     def parse_tensors(self, tensor_tuple, key_ids, ref_ids):
         key_tensors = []

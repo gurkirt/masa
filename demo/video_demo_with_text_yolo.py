@@ -102,16 +102,19 @@ def main():
         masa_model = init_masa(args.masa_config, args.masa_checkpoint, device=args.device)
     else:
         if args.detector_type == 'yolov10':
-            from ultralytics import YOLOv10
-            yolov10_model = YOLOv10.from_pretrained('jameslahm/yolov10b')
+            from ultralytics import YOLO10
+            det_model = YOLO10(args.det_checkpoint)
+
+        elif args.detector_type == 'yolov8':
+            from ultralytics import YOLO
+            det_model = YOLO(args.det_checkpoint)
 
         elif args.detector_type == 'mmdet':
             det_model = init_detector(args.det_config, args.det_checkpoint, palette='random', device=args.device)
-            # build test pipeline
             det_model.cfg.test_dataloader.dataset.pipeline[0].type = 'mmdet.LoadImageFromNDArray'
             test_pipeline = Compose(det_model.cfg.test_dataloader.dataset.pipeline)
         else:
-            raise Exception('ATM only mmdet or YOLOv10 detection models are allowed')
+            raise Exception('ATM only mmdet or YOLOv8 or YOLOv10 detection models are allowed')
         
         masa_model = init_masa(args.masa_config, args.masa_checkpoint, device=args.device)
         
@@ -143,8 +146,8 @@ def main():
         masa_model.cfg.visualizer['texts'] = texts
     elif args.detector_type == 'mmdet':
         masa_model.cfg.visualizer['texts'] = det_model.dataset_meta['classes']
-    elif args.detector_type != 'mmdet':
-        masa_model.cfg.visualizer['texts'] = yolov10_model.names
+    elif args.detector_type == 'mmdet':
+        masa_model.cfg.visualizer['texts'] = det_model.names
 
     # init visualizer
     masa_model.cfg.visualizer['save_dir'] = args.save_dir
@@ -152,11 +155,14 @@ def main():
     if args.sam_mask:
         masa_model.cfg.visualizer['alpha'] = 0.5
     visualizer = VISUALIZERS.build(masa_model.cfg.visualizer)
+    # pdb.set_trace()
     if args.out:
+        out_shape = (video_reader.width, video_reader.height)
+        out_shape = (1024, 1024)
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         video_writer = cv2.VideoWriter(
             args.out, fourcc, video_reader.fps,
-            (video_reader.width, video_reader.height))
+            out_shape)
 
     frame_idx = 0
     instances_list = []
@@ -185,16 +191,16 @@ def main():
                 pred_bboxes = result.pred_instances.bboxes
                 pred_scores = result.pred_instances.scores
                 pred_labels = result.pred_instances.labels
-            elif args.detector_type == 'yolov10':
-                preds = yolov10_model.predict(frame)
+            elif args.detector_type in ['yolov10', 'yolov8']:
+                preds = det_model.predict(frame)
                 boxes = preds[0].boxes.xyxy
                 conf = preds[0].boxes.conf.unsqueeze(1)
-                # print(boxes.shape, conf.shape)
                 det_bboxes = torch.cat((boxes,conf ),1)
-                # print(det_bboxes.shape)
                 det_labels = preds[0].boxes.cls
-                
-            if args.detector_type != 'yolov10':
+            else:
+                raise NotImplementedError('Detector type {} not supported'.format(args.detector_type))
+            
+            if args.detector_type == 'mmdet':
                 # Perfom inter-class NMS to remove nosiy detections
                 det_bboxes, keep_idx = batched_nms(boxes=pred_bboxes,
                                                 scores=pred_scores,
@@ -209,6 +215,7 @@ def main():
                                                 dim=1)
                 det_labels = pred_labels[keep_idx]
 
+            # pdb.set_trace()
             track_result = inference_masa(masa_model, frame, frame_id=frame_idx,
                                           video_len=len(video_reader),
                                           test_pipeline=masa_test_pipeline,
@@ -216,8 +223,13 @@ def main():
                                           det_labels=det_labels,
                                           fp16=args.fp16,
                                           show_fps=args.show_fps)
+            
+
             if args.show_fps:
                 track_result, fps = track_result
+
+            track_result, box_feats = track_result
+            # pdb.set_trace()
 
         frame_idx += 1
         if 'masks' in track_result[0].pred_track_instances:

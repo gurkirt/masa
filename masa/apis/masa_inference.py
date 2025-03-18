@@ -249,14 +249,14 @@ def inference_masa(
         if show_fps:
             start = time.time()
             with autocast(enabled=fp16):
-                result = model.test_step(data)[0]
+                result = model.test_step(data)[:2]
             end = time.time()
             fps = 1 / (end - start)
             return result, fps
 
         else:
             with autocast(enabled=fp16):
-                result = model.test_step(data)[0]
+                result = model.test_step(data)[:2]
             return result
 
 
